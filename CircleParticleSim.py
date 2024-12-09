@@ -47,7 +47,9 @@ class CircleParticleSim:
             cooling_schedule = basic_cooling_schedule,
             step_size_schedule = const_step_size_schedule
             ) -> None:
-        rand.seed(seed)
+        
+        
+        # rand.seed(seed)
 
         # parameters for the simulation
         self.N = N
@@ -67,13 +69,13 @@ class CircleParticleSim:
         
 
         
-        for step in range(steps):
-            self.step = step
-            self.single_move()
-            self.T = self.cooling_schedule(self.T, step)
+        # for step in range(steps):
+        #     self.step = step
+        #     self.single_move()
+        #     self.T = self.cooling_schedule(self.T, step)
         
-        self.plot_positions()
-        print('mimimal energy', self.E)
+        # self.plot_positions()
+        # print('mimimal energy', self.E)
 
 
           
@@ -97,71 +99,81 @@ class CircleParticleSim:
             
     def initial_energy(self):
         self.distance_matrix = scipy.spatial.distance_matrix(self.particle_locations, self.particle_locations)
-
-
         np.fill_diagonal(self.distance_matrix, np.inf)
-
         self.E = np.sum(1/self.distance_matrix)
 
-
     def step_consequences(self, particle_index, new_location):
-
         energy_contribution = 2 * np.sum(1/self.distance_matrix[particle_index,:])
-
         new_distances = scipy.spatial.distance_matrix(new_location[None, :], self.particle_locations).reshape(-1)
-        
         new_distances[particle_index] = np.inf
-
         new_energy_contribution = 2 * np.sum(1/new_distances)
-
         return (new_energy_contribution - energy_contribution), new_distances
 
-
-            
     def single_move(self):
-        
         i = rand.randint(self.N)
-        
         particle_location = self.particle_locations[i]
-        
-
-
 
         r =  self.step_size_schedule(self.step) # * rand.rand()
         theta = 2*np.pi * rand.rand()     
-
         step = [r*np.cos(theta), r*np.sin(theta)]
-        
         new_location = particle_location+step
-        
         if np.linalg.norm(new_location)>1:
             new_location /=  np.linalg.norm(new_location)
-
-
         dE, new_distances = self.step_consequences(i, new_location)
-
         acceptance = min(1, np.exp(-dE/self.T))
-
         if rand.rand() < acceptance:
             self.particle_locations[i] = new_location
             self.E += dE
-
             self.distance_matrix[i,:] = new_distances
             self.distance_matrix[:,i] = new_distances
-
-
         
         self.energy_values[self.step] = self.E
         self.temp_values[self.step] = self.T
 
+    def run_simulation(self, steps):
+        energies_over_time = []
+        for step in range(steps):
+            self.step = step
+            self.single_move()
+            self.T = self.cooling_schedule(self.T, step)
+            energies_over_time.append(self.E)
+        return np.array(energies_over_time)
 
-        
-            
+
+
+
+
+# plotting functions
+def evaluate_multiple_runs(N, cooling_schedule, steps=10000, num_runs=10):
+    all_energy_values = np.zeros((num_runs, steps))
     
+    for run in range(num_runs):
+        sim = CircleParticleSim(N, cooling_schedule=cooling_schedule)
+        energies = sim.run_simulation(steps)
+        all_energy_values[run] = energies
     
+    mean_energy = np.mean(all_energy_values, axis=0)
+    std_energy = np.std(all_energy_values, axis=0)
+    
+    return mean_energy, std_energy
+
+def plot_shadow(mean_energy, std_energy):
+    plt.figure(figsize=(10, 6))
+    plt.plot(mean_energy, label="Mean Energy", color='b')
+    plt.fill_between(range(len(mean_energy)), mean_energy - std_energy, mean_energy + std_energy, color='b', alpha=0.3)
+    plt.xlabel("Steps")
+    plt.ylabel("Energy")
+    plt.title("Minimal Energy with Standard Deviation Over Time")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
-    num_runs = 20
     num_particles = 5
-
-    sim = CircleParticleSim(num_particles)
+    steps = 10000 
+    num_runs = 20  
     
+    mean_energy, std_energy = evaluate_multiple_runs(num_particles, cooling_schedule=basic_cooling_schedule, steps=steps, num_runs=num_runs)
+    
+    plot_shadow(mean_energy, std_energy)
