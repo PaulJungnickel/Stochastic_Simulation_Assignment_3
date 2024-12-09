@@ -59,10 +59,10 @@ class CircleParticleSim:
         
 
         
-        for i in range(steps):
-            self.step = i
+        for step in range(steps):
+            self.step = step
             self.single_move()
-            self.T = self.cooling_schedule(self.T, i)
+            self.T = self.cooling_schedule(self.T, step)
         
         self.plot_positions()
         print('mimimal energy', self.E)
@@ -145,8 +145,8 @@ class CircleParticleSim:
 
 
         
-        self.energy_values[i] = self.E
-        self.temp_values[i] = self.T
+        self.energy_values[self.step] = self.E
+        self.temp_values[self.step] = self.T
 
 
         
