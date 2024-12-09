@@ -15,6 +15,8 @@ def paper_cooling_schedule(T, step):
         return 0.9*T
     return T
 
+def exponential_cooling_schedule(T, step, alpha=0.99):
+    return alpha * T
 
 def log_cooling_schedule(T, step):
     
@@ -36,12 +38,18 @@ def linear_step_size_schedule(step, *args):
 
 class CircleParticleSim:
     
-    def __init__(self, N, initial_temperature = 10, steps=100, seed=42, 
-                 cooling_schedule = basic_cooling_schedule,
-                 step_size_schedule = const_step_size_schedule
-                 ) -> None:
+    def __init__(
+            self,
+            N,
+            initial_temperature = 10,
+            steps=10000,
+            seed=42,
+            cooling_schedule = basic_cooling_schedule,
+            step_size_schedule = const_step_size_schedule
+            ) -> None:
         rand.seed(seed)
-        #parameters for the simulation
+
+        # parameters for the simulation
         self.N = N
         self.T = initial_temperature
         self.initial_locations()
@@ -52,7 +60,7 @@ class CircleParticleSim:
         print('initial energy', self.E)
 
 
-        #initialize statistics datastructures
+        # initialize statistics datastructures
         self.energy_values = np.zeros(steps)
         self.temp_values = np.zeros(steps)
         self.num_internal_pts = np.zeros(steps)
@@ -66,9 +74,7 @@ class CircleParticleSim:
         
         self.plot_positions()
         print('mimimal energy', self.E)
-        self.initial_energy()
 
-        print('mimimal energy', self.E)
 
           
           
@@ -100,13 +106,13 @@ class CircleParticleSim:
 
     def step_consequences(self, particle_index, new_location):
 
-        energy_contribution = 2* np.sum(1/self.distance_matrix[particle_index,:])
+        energy_contribution = 2 * np.sum(1/self.distance_matrix[particle_index,:])
 
         new_distances = scipy.spatial.distance_matrix(new_location[None, :], self.particle_locations).reshape(-1)
         
         new_distances[particle_index] = np.inf
 
-        new_energy_contribution = 2* np.sum(1/new_distances)
+        new_energy_contribution = 2 * np.sum(1/new_distances)
 
         return (new_energy_contribution - energy_contribution), new_distances
 
@@ -154,7 +160,8 @@ class CircleParticleSim:
     
     
 if __name__ == '__main__':
-    
-    sim = CircleParticleSim(30)
+    num_runs = 20
+    num_particles = 5
 
+    sim = CircleParticleSim(num_particles)
     
