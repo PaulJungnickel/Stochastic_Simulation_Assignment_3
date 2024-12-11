@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.spatial
 
-def basic_cooling_schedule(T, step):
+def basic_cooling_schedule(sim):
     """
     Basic cooling schedule that reduces temperature slightly each step.
 
@@ -15,9 +15,9 @@ def basic_cooling_schedule(T, step):
     Returns:
     - Updated temperature.
     """
-    return 0.999 * T
+    return 0.999 * sim.T
 
-def paper_cooling_schedule(T, step):
+def paper_cooling_schedule(sim):
     """
     Cooling schedule inspired by a specific paper; reduces temperature
     significantly every 100 steps.
@@ -29,11 +29,11 @@ def paper_cooling_schedule(T, step):
     Returns:
     - Updated temperature.
     """
-    if step % 100 == 0:
-        return 0.9 * T
-    return T
+    if sim.step % 100 == 0:
+        return 0.9 * sim.T
+    return sim.T
 
-def exponential_cooling_schedule(T, step, alpha=0.99):
+def exponential_cooling_schedule(sim):
     """
     Exponential cooling schedule with a fixed decay rate.
 
@@ -45,9 +45,9 @@ def exponential_cooling_schedule(T, step, alpha=0.99):
     Returns:
     - Updated temperature.
     """
-    return alpha * T
+    return 0.999 * sim.T
 
-def log_cooling_schedule(T, step):
+def log_cooling_schedule(sim):
     """
     Logarithmic cooling schedule based on the step count.
 
@@ -58,9 +58,9 @@ def log_cooling_schedule(T, step):
     Returns:
     - Updated temperature.
     """
-    return 1 / (np.log(step + 3))
+    return 1 / (np.log(sim.step + 3))
 
-def const_step_size_schedule(step, *args):
+def const_step_size_schedule(sim):
     """
     Step size schedule that returns a constant step size.
 
@@ -72,7 +72,7 @@ def const_step_size_schedule(step, *args):
     """
     return 0.1
 
-def random_step_size_schedule(step, *args):
+def random_step_size_schedule(sim):
     """
     Step size schedule that returns a random step size.
 
@@ -84,7 +84,7 @@ def random_step_size_schedule(step, *args):
     """
     return np.random.rand()
 
-def hyperbolic_step_size_schedule(step, *args):
+def hyperbolic_step_size_schedule(sim):
     """
     Step size schedule that decreases hyperbolically with steps.
 
@@ -94,9 +94,9 @@ def hyperbolic_step_size_schedule(step, *args):
     Returns:
     - Updated step size.
     """
-    return np.maximum(0.001, 1. / (1 + 0.1 * step))
+    return np.maximum(0.001, 1. / (1 + 0.1 * sim.step))
 
-def linear_step_size_schedule(step, *args):
+def linear_step_size_schedule(sim):
     """
     Step size schedule that decreases linearly with steps.
 
@@ -106,7 +106,7 @@ def linear_step_size_schedule(step, *args):
     Returns:
     - Updated step size.
     """
-    return np.maximum(0.0001, 1 - 1 / 10000 * step)
+    return np.maximum(0.0001, 1 - 1 / 10000 * sim.step)
 
 class CircleParticleSim:
     """
@@ -128,7 +128,7 @@ class CircleParticleSim:
             steps=10000,
             seed=42,
             cooling_schedule=basic_cooling_schedule,
-            step_size_schedule=const_step_size_schedule
+            step_size_schedule=random_step_size_schedule
             ) -> None:
         """
         Initialize the simulation with given parameters.
@@ -222,7 +222,7 @@ class CircleParticleSim:
         particle_location = self.particle_locations[i]
 
         # Propose a move
-        r = self.step_size_schedule(self.step)
+        r = self.step_size_schedule(self)
         theta = 2 * np.pi * rand.rand()
         step = [r * np.cos(theta), r * np.sin(theta)]
         new_location = particle_location + step
@@ -258,7 +258,7 @@ class CircleParticleSim:
         for step in range(steps):
             self.step = step
             self.single_move()
-            self.T = self.cooling_schedule(self.T, step)
+            self.T = self.cooling_schedule(self)
             energies_over_time.append(self.E)
         return np.array(energies_over_time)
 
