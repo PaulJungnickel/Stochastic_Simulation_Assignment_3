@@ -108,6 +108,39 @@ def linear_step_size_schedule(sim):
     """
     return np.maximum(0.0001, 1 - 1 / 10000 * sim.step)
 
+
+def sqrt_step_size_schedule(sim):
+    """
+    Step size schedule that decreases as the square root of temperature.
+
+    Parameters:
+    - step: Current step number.
+
+    Returns:
+    - Updated step size.
+    """
+    return np.sqrt(sim.T) * rand.rand()
+
+
+
+def random_step_direction(sim, particle_index):
+    return 2 * np.pi * rand.rand()
+
+def force_step_direction(sim, particle_index):
+    particle = sim.particle_locations[particle_index]
+
+    diff = particle - sim.particle_locations
+
+    F = diff / (np.linalg.norm(diff, axis=1) **3).reshape(-1,1)
+    F[particle_index] = 0
+    F = np.sum(F, axis=0)
+    theta = np.atan2(F[1],  F[0])
+    # theta = np.pi - theta
+
+    return theta
+
+
+
 class CircleParticleSim:
     """
     Simulation of particles constrained to a circular boundary.
@@ -128,7 +161,8 @@ class CircleParticleSim:
             steps=10000,
             seed=42,
             cooling_schedule=basic_cooling_schedule,
-            step_size_schedule=random_step_size_schedule
+            step_size_schedule=random_step_size_schedule,
+            random_step_likelihood = 0.2
             ) -> None:
         """
         Initialize the simulation with given parameters.
@@ -152,8 +186,9 @@ class CircleParticleSim:
         self.initial_energy()
         self.cooling_schedule = cooling_schedule
         self.step_size_schedule = step_size_schedule
+        self.random_step_likelihood = random_step_likelihood
 
-        print('initial energy', self.E)
+        # print('initial energy', self.E)
 
         # Initialize statistics data structures
         self.energy_values = np.zeros(steps)
@@ -223,7 +258,11 @@ class CircleParticleSim:
 
         # Propose a move
         r = self.step_size_schedule(self)
-        theta = 2 * np.pi * rand.rand()
+        theta = 0
+        if rand.rand() < self.random_step_likelihood:
+            theta = random_step_direction(self, i)
+        else:
+            theta = force_step_direction(self, i)
         step = [r * np.cos(theta), r * np.sin(theta)]
         new_location = particle_location + step
 
