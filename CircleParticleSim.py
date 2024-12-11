@@ -60,6 +60,63 @@ def log_cooling_schedule(sim):
     """
     return 1 / (np.log(sim.step + 3))
 
+def linear_cooling_schedule(sim):
+    """
+    Linear cooling schedule that decreases temperature linearly with steps.
+
+    Returns:
+    - Updated temperature.
+    """
+    return max(0.01, sim.T - 0.0001)
+
+def quadratic_cooling_schedule(sim):
+    """
+    Quadratic cooling schedule that decreases temperature quadratically.
+
+    Returns:
+    - Updated temperature.
+    """
+    return max(0.01, sim.T * (1 - (sim.step / 10000) ** 2))
+
+def sigmoid_cooling_schedule(sim):
+    """
+    Sigmoid cooling schedule for gradual temperature decrease.
+
+    Returns:
+    - Updated temperature.
+    """
+    return sim.T * (1 / (1 + np.exp((sim.step - 5000) / 1000)))
+
+def inverse_sqrt_cooling_schedule(sim):
+    """
+    Inverse square root cooling schedule.
+
+    Returns:
+    - Updated temperature.
+    """
+    return sim.T / np.sqrt(sim.step + 1)
+
+def cosine_annealing_cooling_schedule(sim):
+    """
+    Cosine annealing cooling schedule.
+
+    Returns:
+    - Updated temperature.
+    """
+    return 0.5 * sim.T * (1 + np.cos(np.pi * sim.step / 10000))
+
+def stepwise_cooling_schedule(sim):
+    """
+    Stepwise cooling schedule that reduces temperature in steps.
+
+    Returns:
+    - Updated temperature.
+    """
+    if sim.step % 500 == 0:
+        return 0.8 * sim.T
+    return sim.T
+
+
 def const_step_size_schedule(sim):
     """
     Step size schedule that returns a constant step size.
@@ -308,9 +365,34 @@ def plot_shadow(mean_energy, std_energy):
 
 if __name__ == '__main__':
     num_particles = 5
-    steps = 10000
-    num_runs = 20
+    steps = 1500
+    num_runs = 3
+    schedules = [
+    log_cooling_schedule,
+    # basic_cooling_schedule,
+    # paper_cooling_schedule,
+    # exponential_cooling_schedule,
+    # linear_cooling_schedule,
+    quadratic_cooling_schedule,
+    sigmoid_cooling_schedule,
+    inverse_sqrt_cooling_schedule,
+    cosine_annealing_cooling_schedule,
+    # stepwise_cooling_schedule,
+    ]
 
-    mean_energy, std_energy = evaluate_multiple_runs(num_particles, cooling_schedule=basic_cooling_schedule, steps=steps, num_runs=num_runs)
 
-    plot_shadow(mean_energy, std_energy)
+    plt.figure(figsize=(10, 6))
+
+    for schedule in schedules:
+        print(schedule)
+        mean_energy, std_energy = evaluate_multiple_runs(num_particles, cooling_schedule=schedule, steps=steps, num_runs=num_runs)
+        plt.plot(mean_energy, label=schedule)
+        plt.fill_between(range(len(mean_energy)), mean_energy - std_energy, mean_energy + std_energy, alpha=0.3)
+    plt.xlabel("Steps")
+    plt.ylabel("Energy")
+    plt.title("Minimal Energy with Standard Deviation Over Time")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+    # plot_shadow(mean_energy, std_energy)
+
