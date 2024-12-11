@@ -369,17 +369,16 @@ if __name__ == '__main__':
     num_runs = 3
     schedules = [
     log_cooling_schedule,
-    # basic_cooling_schedule,
-    # paper_cooling_schedule,
-    # exponential_cooling_schedule,
-    # linear_cooling_schedule,
+    basic_cooling_schedule,
+    paper_cooling_schedule,
+    exponential_cooling_schedule,
+    linear_cooling_schedule,
     quadratic_cooling_schedule,
     sigmoid_cooling_schedule,
     inverse_sqrt_cooling_schedule,
     cosine_annealing_cooling_schedule,
-    # stepwise_cooling_schedule,
+    stepwise_cooling_schedule,
     ]
-
 
     plt.figure(figsize=(10, 6))
 
