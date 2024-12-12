@@ -1,0 +1,26 @@
+
+tododo
+
+
+table
+
+
+cooling schedule :
+    2 stacked graphs with one constant N
+        top - convergence of method
+
+    remove
+        basic
+        log
+        linear
+        cosine
+        
+
+
+
+markov chain length?
+
+
+
+neighboring - strategies, 
+
