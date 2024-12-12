@@ -183,18 +183,36 @@ def sqrt_step_size_schedule(sim):
 def random_step_direction(sim, particle_index):
     return 2 * np.pi * rand.rand()
 
+# def force_step_direction(sim, particle_index):
+#     particle = sim.particle_locations[particle_index]
+
+#     diff = particle - sim.particle_locations
+
+#     F = diff / (np.linalg.norm(diff, axis=1) **3).reshape(-1,1)
+#     F[particle_index] = 0
+#     F = np.sum(F, axis=0)
+#     theta = np.atan2(F[1],  F[0])
+#     # theta = np.pi - theta
+
+#     return theta
+
 def force_step_direction(sim, particle_index):
     particle = sim.particle_locations[particle_index]
-
     diff = particle - sim.particle_locations
 
-    F = diff / (np.linalg.norm(diff, axis=1) **3).reshape(-1,1)
-    F[particle_index] = 0
-    F = np.sum(F, axis=0)
-    theta = np.atan2(F[1],  F[0])
-    # theta = np.pi - theta
+    # Add epsilon to avoid division by zero
+    epsilon = 1e-8
+    norms = np.linalg.norm(diff, axis=1)
+    norms = np.maximum(norms, epsilon)  # Ensure no zero norms
+    norms = norms ** 3
 
+    F = diff / norms[:, None]
+    F[particle_index] = 0  # Exclude self-force
+    F = np.sum(F, axis=0)
+
+    theta = np.arctan2(F[1], F[0])
     return theta
+
 
 
 class CircleParticleSim:
