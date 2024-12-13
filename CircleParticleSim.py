@@ -368,12 +368,14 @@ class CircleParticleSim:
         - Array of energy values over time.
         """
         energies_over_time = []
+        temp_over_time = []
         for step in range(steps):
             self.step = step
             self.single_move()
             self.T = self.cooling_schedule(self)
             energies_over_time.append(self.E)
-        return np.array(energies_over_time)
+            temp_over_time.append(self.T)
+        return np.array(energies_over_time, temp_over_time)
 
 # Plotting functions
 def evaluate_multiple_runs(N, cooling_schedule, steps=10000, num_runs=10):
@@ -390,16 +392,20 @@ def evaluate_multiple_runs(N, cooling_schedule, steps=10000, num_runs=10):
     - Mean energy and standard deviation of energy over time.
     """
     all_energy_values = np.zeros((num_runs, steps))
+    all_temperature_values = np.zeros((num_runs, steps))
 
     for run in range(num_runs):
         sim = CircleParticleSim(N, cooling_schedule=cooling_schedule)
-        energies = sim.run_simulation(steps)
+        energies, temperatures = sim.run_simulation(steps)
         all_energy_values[run] = energies
+        all_temperature_values[run] = temperatures
 
     mean_energy = np.mean(all_energy_values, axis=0)
     std_energy = np.std(all_energy_values, axis=0)
+    mean_temperatures = np.mean(all_temperature_values, axis)
 
-    return mean_energy, std_energy
+
+    return mean_energy, std_energy, mean_temperatures
 
 def plot_shadow(mean_energy, std_energy):
     """
@@ -421,19 +427,19 @@ def plot_shadow(mean_energy, std_energy):
 
 if __name__ == '__main__':
     num_particles = 5
-    steps = 1500
-    num_runs = 3
+    steps = 10000
+    num_runs = 20
     schedules = [
-    log_cooling_schedule,
-    basic_cooling_schedule,
+    # log_cooling_schedule,
+    # basic_cooling_schedule,
     paper_cooling_schedule,
     exponential_cooling_schedule,
-    linear_cooling_schedule,
+    # linear_cooling_schedule,
     quadratic_cooling_schedule,
     sigmoid_cooling_schedule,
     inverse_sqrt_cooling_schedule,
     cosine_annealing_cooling_schedule,
-    stepwise_cooling_schedule,
+    # stepwise_cooling_schedule,
     ]
 
     plt.figure(figsize=(10, 6))
@@ -446,8 +452,11 @@ if __name__ == '__main__':
     plt.xlabel("Steps")
     plt.ylabel("Energy")
     plt.title("Minimal Energy with Standard Deviation Over Time")
-    plt.grid(True)
+    plt.xlim(left=100)
+    plt.xscale('log')
+    plt.yscale('log')
     plt.legend()
+    
+    plt.grid(True)
     plt.show()
-    # plot_shadow(mean_energy, std_energy)
 
