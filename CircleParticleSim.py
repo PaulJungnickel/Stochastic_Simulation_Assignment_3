@@ -29,7 +29,11 @@ def paper_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    if sim.step % 100 == 0:
+    if sim.extra_args is None:
+        steps_until_decrease = 100
+    else:
+        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 100)
+    if sim.step % steps_until_decrease == 0:
         return 0.9 * sim.T
     return sim.T
 
@@ -219,7 +223,8 @@ class CircleParticleSim:
             seed=42,
             cooling_schedule=basic_cooling_schedule,
             step_size_schedule=random_step_size_schedule,
-            random_step_likelihood = 0.2
+            random_step_likelihood = 0.2,
+            extra_args = None
             ) -> None:
         """
         Initialize the simulation with given parameters.
@@ -231,6 +236,9 @@ class CircleParticleSim:
         - seed: Random seed for reproducibility.
         - cooling_schedule: Function to update temperature.
         - step_size_schedule: Function to update step size.
+        - random_step_likelihood: probability of taking a random step 
+        (instead of a step in the direction of all forces working on the particle)
+        - extra_args dictionary with named arguments accessed by the member functions
         """
 
         # Set random seed
@@ -239,6 +247,7 @@ class CircleParticleSim:
         # Simulation parameters
         self.N = N
         self.T = initial_temperature
+        self.extra_args = extra_args
         self.initial_locations()
         self.initial_energy()
         self.cooling_schedule = cooling_schedule
@@ -405,6 +414,7 @@ def plot_shadow(mean_energy, std_energy):
 if __name__ == '__main__':
     num_particles = 5
     steps = 1500
+    
     num_runs = 3
     schedules = [
     log_cooling_schedule,
