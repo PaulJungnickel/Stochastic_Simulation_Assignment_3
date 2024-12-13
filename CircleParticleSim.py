@@ -384,7 +384,7 @@ class CircleParticleSim:
             self.T = self.cooling_schedule(self)
             energies_over_time.append(self.E)
             temp_over_time.append(self.T)
-        return np.array(energies_over_time, temp_over_time)
+        return np.array(energies_over_time), np.array(temp_over_time)
 
 # Plotting functions
 def evaluate_multiple_runs(N, cooling_schedule, steps=10000, num_runs=10):
@@ -411,7 +411,7 @@ def evaluate_multiple_runs(N, cooling_schedule, steps=10000, num_runs=10):
 
     mean_energy = np.mean(all_energy_values, axis=0)
     std_energy = np.std(all_energy_values, axis=0)
-    mean_temperatures = np.mean(all_temperature_values, axis)
+    mean_temperatures = np.mean(all_temperature_values, axis=0)
 
 
     return mean_energy, std_energy, mean_temperatures
@@ -444,28 +444,46 @@ if __name__ == '__main__':
     paper_cooling_schedule,
     exponential_cooling_schedule,
     # linear_cooling_schedule,
-    quadratic_cooling_schedule,
+    # quadratic_cooling_schedule,
     sigmoid_cooling_schedule,
     inverse_sqrt_cooling_schedule,
     cosine_annealing_cooling_schedule,
     # stepwise_cooling_schedule,
     ]
 
+    # plt.figure(figsize=(10, 6))
+
+    # for schedule in schedules:
+    #     print(schedule)
+    #     mean_energy, std_energy, mean_temperatures = evaluate_multiple_runs(num_particles, cooling_schedule=schedule, steps=steps, num_runs=num_runs)
+    #     plt.plot(mean_energy, label=schedule)
+    #     plt.fill_between(range(len(mean_energy)), mean_energy - std_energy, mean_energy + std_energy, alpha=0.3)
+    # plt.xlabel("Steps")
+    # plt.ylabel("Energy")
+    # plt.title("Minimal Energy with Standard Deviation Over Time")
+    # plt.xlim(left=100)
+    # plt.xscale('log')
+    # plt.yscale('log')
+    # plt.legend()
+    
+    # plt.grid(True)
+    # plt.show()
+
     plt.figure(figsize=(10, 6))
 
     for schedule in schedules:
-        print(schedule)
-        mean_energy, std_energy = evaluate_multiple_runs(num_particles, cooling_schedule=schedule, steps=steps, num_runs=num_runs)
-        plt.plot(mean_energy, label=schedule)
-        plt.fill_between(range(len(mean_energy)), mean_energy - std_energy, mean_energy + std_energy, alpha=0.3)
+        print(schedule.__name__)
+        mean_energy, std_energy, mean_temperatures = evaluate_multiple_runs(
+            num_particles, cooling_schedule=schedule, steps=steps, num_runs=1
+        )
+        plt.plot(mean_temperatures, label=schedule.__name__)
+
     plt.xlabel("Steps")
-    plt.ylabel("Energy")
-    plt.title("Minimal Energy with Standard Deviation Over Time")
+    plt.ylabel("Temperature")
+    plt.title("Temperature Evolution Over Time")
     plt.xlim(left=100)
     plt.xscale('log')
-    plt.yscale('log')
     plt.legend()
-    
     plt.grid(True)
     plt.show()
 
