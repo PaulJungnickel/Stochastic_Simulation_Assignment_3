@@ -29,11 +29,7 @@ def paper_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    if sim.extra_args is None:
-        steps_until_decrease = 100
-    else:
-        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 100)
-    if sim.step % steps_until_decrease == 0:
+    if sim.step % 100 == 0:
         return 0.9 * sim.T
     return sim.T
 
@@ -187,36 +183,18 @@ def sqrt_step_size_schedule(sim):
 def random_step_direction(sim, particle_index):
     return 2 * np.pi * rand.rand()
 
-# def force_step_direction(sim, particle_index):
-#     particle = sim.particle_locations[particle_index]
-
-#     diff = particle - sim.particle_locations
-
-#     F = diff / (np.linalg.norm(diff, axis=1) **3).reshape(-1,1)
-#     F[particle_index] = 0
-#     F = np.sum(F, axis=0)
-#     theta = np.atan2(F[1],  F[0])
-#     # theta = np.pi - theta
-
-#     return theta
-
 def force_step_direction(sim, particle_index):
     particle = sim.particle_locations[particle_index]
+
     diff = particle - sim.particle_locations
 
-    # Add epsilon to avoid division by zero
-    epsilon = 1e-8
-    norms = np.linalg.norm(diff, axis=1)
-    norms = np.maximum(norms, epsilon)  # Ensure no zero norms
-    norms = norms ** 3
-
-    F = diff / norms[:, None]
-    F[particle_index] = 0  # Exclude self-force
+    F = diff / (np.linalg.norm(diff, axis=1) **3).reshape(-1,1)
+    F[particle_index] = 0
     F = np.sum(F, axis=0)
+    theta = np.atan2(F[1],  F[0])
+    # theta = np.pi - theta
 
-    theta = np.arctan2(F[1], F[0])
     return theta
-
 
 
 class CircleParticleSim:
@@ -240,8 +218,7 @@ class CircleParticleSim:
             seed=42,
             cooling_schedule=basic_cooling_schedule,
             step_size_schedule=random_step_size_schedule,
-            random_step_likelihood = 0.2,
-            extra_args = None
+            random_step_likelihood = 0.2
             ) -> None:
         """
         Initialize the simulation with given parameters.
@@ -253,9 +230,6 @@ class CircleParticleSim:
         - seed: Random seed for reproducibility.
         - cooling_schedule: Function to update temperature.
         - step_size_schedule: Function to update step size.
-        - random_step_likelihood: probability of taking a random step 
-        (instead of a step in the direction of all forces working on the particle)
-        - extra_args dictionary with named arguments accessed by the member functions
         """
 
         # Set random seed
@@ -264,7 +238,6 @@ class CircleParticleSim:
         # Simulation parameters
         self.N = N
         self.T = initial_temperature
-        self.extra_args = extra_args
         self.initial_locations()
         self.initial_energy()
         self.cooling_schedule = cooling_schedule
@@ -431,7 +404,6 @@ def plot_shadow(mean_energy, std_energy):
 if __name__ == '__main__':
     num_particles = 5
     steps = 1500
-    
     num_runs = 3
     schedules = [
     log_cooling_schedule,
