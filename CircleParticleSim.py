@@ -20,7 +20,7 @@ def basic_cooling_schedule(sim):
 def paper_cooling_schedule(sim):
     """
     Cooling schedule inspired by a specific paper; reduces temperature
-    significantly every 100 steps.
+    significantly every 1000 steps.
 
     Parameters:
     - T: Current temperature.
@@ -30,11 +30,11 @@ def paper_cooling_schedule(sim):
     - Updated temperature.
     """
     if sim.extra_args is None:
-        steps_until_decrease = 100
+        steps_until_decrease = 1000
     else:
-        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 100)
+        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 1000)
     if sim.step % steps_until_decrease == 0:
-        return 0.9 * sim.T
+        return 0.95 * sim.T
     return sim.T
 
 def exponential_cooling_schedule(sim):
@@ -238,7 +238,7 @@ class CircleParticleSim:
             initial_temperature=10,
             steps=10000,
             seed=42,
-            cooling_schedule=basic_cooling_schedule,
+            cooling_schedule=paper_cooling_schedule,
             step_size_schedule=random_step_size_schedule,
             random_step_likelihood = 0.2,
             extra_args = None
