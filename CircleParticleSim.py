@@ -15,7 +15,7 @@ def basic_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return 0.999 * sim.T
+    return 0.95 * sim.T
 
 def paper_cooling_schedule(sim):
     """
@@ -29,13 +29,7 @@ def paper_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    if sim.extra_args is None:
-        steps_until_decrease = 100
-    else:
-        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 100)
-    if sim.step % steps_until_decrease == 0:
-        return 0.9 * sim.T
-    return sim.T
+    return 0.9 * sim.T
 
 def exponential_cooling_schedule(sim):
     """
@@ -62,7 +56,7 @@ def log_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return 1 / (np.log(sim.step + 3))
+    return 0.01 / (np.log(sim.cooling_step + 2))
 
 def linear_cooling_schedule(sim):
     """
@@ -71,7 +65,7 @@ def linear_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return max(0.01, sim.T - 0.0001)
+    return max(1e-12, sim.T - 0.0001)
 
 def quadratic_cooling_schedule(sim):
     """
@@ -80,7 +74,7 @@ def quadratic_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return max(0.01, sim.T * (1 - (sim.step / 10000) ** 2))
+    return max(0.01, sim.T * (1 - (sim.cooling_step / 10000) ** 2))
 
 def sigmoid_cooling_schedule(sim):
     """
@@ -89,7 +83,7 @@ def sigmoid_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return sim.T * (1 / (1 + np.exp((sim.step - 5000) / 1000)))
+    return sim.T * (1 / (1 + np.exp((sim.cooling_step - 5000) / 1000)))
 
 def inverse_sqrt_cooling_schedule(sim):
     """
@@ -98,7 +92,7 @@ def inverse_sqrt_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return sim.T / np.sqrt(sim.step + 1)
+    return sim.T / np.sqrt(sim.cooling_step + 1)
 
 def cosine_annealing_cooling_schedule(sim):
     """
@@ -107,7 +101,7 @@ def cosine_annealing_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    return 0.5 * sim.T * (1 + np.cos(np.pi * sim.step / 10000))
+    return 0.5 * sim.T * (1 + np.cos(np.pi * sim.cooling_step / 10000))
 
 def stepwise_cooling_schedule(sim):
     """
@@ -116,7 +110,7 @@ def stepwise_cooling_schedule(sim):
     Returns:
     - Updated temperature.
     """
-    if sim.step % 500 == 0:
+    if sim.cooling_step % 500 == 0:
         return 0.8 * sim.T
     return sim.T
 
@@ -155,7 +149,7 @@ def hyperbolic_step_size_schedule(sim):
     Returns:
     - Updated step size.
     """
-    return np.maximum(0.001, 1. / (1 + 0.1 * sim.step))
+    return np.maximum(0.0001, 1. / (1 + 0.1 * sim.cooling_step))
 
 def linear_step_size_schedule(sim):
     """
@@ -167,7 +161,7 @@ def linear_step_size_schedule(sim):
     Returns:
     - Updated step size.
     """
-    return np.maximum(0.0001, 1 - 1 / 10000 * sim.step)
+    return np.maximum(0.0001, 1 - 1 / 10000 * sim.cooling_step)
 
 
 def sqrt_step_size_schedule(sim):
@@ -366,7 +360,7 @@ class CircleParticleSim:
         self.energy_values[self.step] = self.E
         self.temp_values[self.step] = self.T
 
-    def run_simulation(self, steps):
+    def run_simulation(self, cooling_steps, markov_chain_len, tol=1e-6):
         """
         Run the simulation for a given number of steps.
 
@@ -376,10 +370,26 @@ class CircleParticleSim:
         Returns:
         - Array of energy values over time.
         """
+        self.step = 0
         energies_over_time = []
-        for step in range(steps):
-            self.step = step
-            self.single_move()
+        for cooling_step in range(cooling_steps):
+            self.cooling_step = cooling_step
+            rec_energy_steps_to_track = 1000
+            recent_energies = np.zeros(rec_energy_steps_to_track) 
+            for i in range(markov_chain_len):
+                self.single_move()
+                recent_energies[i% rec_energy_steps_to_track] = self.E
+                self.step += 1
+                
+
+
+            if self.step > rec_energy_steps_to_track:
+                # recent_energies = self.energy_values[self.step-1000:self.step]
+                if np.abs(np.mean(recent_energies) - np.min(recent_energies)) <  tol:
+                # print('finished at {}th step with temp {}'.format(cooling_step, self.T))
+                    break
+
+
             self.T = self.cooling_schedule(self)
             energies_over_time.append(self.E)
         return np.array(energies_over_time)
