@@ -183,6 +183,19 @@ def sqrt_step_size_schedule(sim):
     return np.sqrt(sim.T) * rand.rand()
 
 
+def sqrt_const_step_size_schedule(sim):
+    """
+    Step size schedule that decreases as the square root of temperature.
+
+    Parameters:
+    - step: Current step number.
+
+    Returns:
+    - Updated step size.
+    """
+    return np.sqrt(sim.T) 
+
+
 
 def random_step_direction(sim, particle_index):
     return 2 * np.pi * rand.rand()
