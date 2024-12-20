@@ -30,11 +30,11 @@ def paper_cooling_schedule(sim):
     - Updated temperature.
     """
     if sim.extra_args is None:
-        steps_until_decrease = 1000
+        steps_until_decrease = 100
     else:
-        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 1000)
+        steps_until_decrease = int(sim.extra_args['cooling_schedule_scaling'] * 100)
     if sim.step % steps_until_decrease == 0:
-        return 0.95 * sim.T
+        return 0.9 * sim.T
     return sim.T
 
 def exponential_cooling_schedule(sim):
@@ -408,13 +408,13 @@ def evaluate_multiple_runs(N, cooling_schedule, steps=10000, num_runs=10):
         energies, temperatures = sim.run_simulation(steps)
         all_energy_values[run] = energies
         all_temperature_values[run] = temperatures
-
+    
     mean_energy = np.mean(all_energy_values, axis=0)
     std_energy = np.std(all_energy_values, axis=0)
     mean_temperatures = np.mean(all_temperature_values, axis=0)
 
 
-    return mean_energy, std_energy, mean_temperatures
+    return mean_energy, std_energy, mean_temperatures, all_energy_values
 
 def plot_shadow(mean_energy, std_energy):
     """
@@ -451,39 +451,4 @@ if __name__ == '__main__':
     # stepwise_cooling_schedule,
     ]
 
-    # plt.figure(figsize=(10, 6))
-
-    # for schedule in schedules:
-    #     print(schedule)
-    #     mean_energy, std_energy, mean_temperatures = evaluate_multiple_runs(num_particles, cooling_schedule=schedule, steps=steps, num_runs=num_runs)
-    #     plt.plot(mean_energy, label=schedule)
-    #     plt.fill_between(range(len(mean_energy)), mean_energy - std_energy, mean_energy + std_energy, alpha=0.3)
-    # plt.xlabel("Steps")
-    # plt.ylabel("Energy")
-    # plt.title("Minimal Energy with Standard Deviation Over Time")
-    # plt.xlim(left=100)
-    # plt.xscale('log')
-    # plt.yscale('log')
-    # plt.legend()
-    
-    # plt.grid(True)
-    # plt.show()
-
-    plt.figure(figsize=(10, 6))
-
-    for schedule in schedules:
-        print(schedule.__name__)
-        mean_energy, std_energy, mean_temperatures = evaluate_multiple_runs(
-            num_particles, cooling_schedule=schedule, steps=steps, num_runs=1
-        )
-        plt.plot(mean_temperatures, label=schedule.__name__)
-
-    plt.xlabel("Steps")
-    plt.ylabel("Temperature")
-    plt.title("Temperature Evolution Over Time")
-    plt.xlim(left=100)
-    plt.xscale('log')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
+ 
