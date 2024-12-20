@@ -176,6 +176,18 @@ def sqrt_step_size_schedule(sim):
     """
     return np.sqrt(sim.T) * rand.rand()
 
+def sqrt_const_step_size_schedule(sim):
+    """
+    Step size schedule that decreases as the square root of temperature.
+
+    Parameters:
+    - step: Current step number.
+
+    Returns:
+    - Updated step size.
+    """
+    return np.sqrt(sim.T) 
+
 
 
 def random_step_direction(sim, particle_index):
@@ -372,10 +384,10 @@ class CircleParticleSim:
         """
         self.step = 0
         energies_over_time = []
+        rec_energy_steps_to_track = 1000
+        recent_energies = np.zeros(rec_energy_steps_to_track) 
         for cooling_step in range(cooling_steps):
             self.cooling_step = cooling_step
-            rec_energy_steps_to_track = 1000
-            recent_energies = np.zeros(rec_energy_steps_to_track) 
             for i in range(markov_chain_len):
                 self.single_move()
                 recent_energies[i% rec_energy_steps_to_track] = self.E
